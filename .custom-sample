@@ -1,3 +1,5 @@
 # Any parameters defined here will override the scripts.
 
 EXCLUDE_PATHS=""
+
+BUILD_COMMAND=""

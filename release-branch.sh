@@ -1,9 +1,11 @@
 #!/bin/sh
+# Release branch management!
 
 # Variables
 RELEASER_VERSION="1.0"
 RELEASER_PATH=$(pwd)
 BUILD_PATH="${RELEASER_PATH}/build"
+RELEASE_PATH="${RELEASER_PATH}/release"
 GITHUB_ORG="Automattic"
 
 # Functions
@@ -28,7 +30,7 @@ output_list() {
 
 cleanup() {
     cd "$RELEASER_PATH"
-    rm -rf "$BUILD_PATH"
+    rm -rf "$BUILD_PATH" "$RELEASE_PATH"
     exit 1
 }
 
@@ -132,6 +134,7 @@ fi
 # Set deploy variables
 GIT_REPO="git@github.com:${GITHUB_ORG}/${PLUGIN_SLUG}.git"
 GIT_PATH="${BUILD_PATH}/${PLUGIN_SLUG}"
+GIT_PATH_RELEASE="${RELEASE_PATH}/${PLUGIN_SLUG}"
 
 # Ask info
 output 2 "Let's begin..."
@@ -173,18 +176,20 @@ output 2 "Confirmed! Starting process..."
 # Create build directory if does not exists
 if [ ! -d "$BUILD_PATH" ]; then
   mkdir -p "$BUILD_PATH"
+  mkdir -p "$RELEASE_PATH"
 else
   printf "Existing release found. Would you like to delete it and start fresh? [y/N]: "
   read -r PROCEED
   if [ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "n" ]; then
-    rm -rf "$BUILD_PATH"
+    rm -rf "$BUILD_PATH" "$RELEASE_PATH"
     mkdir -p "$BUILD_PATH"
+    mkdir -p "$RELEASE_PATH"
   fi
 fi
 
 # Clone GIT repository
 output 2 "Cloning GIT repository..."
-git clone "$GIT_REPO" "$GIT_PATH" --branch "$SRC_BRANCH" --depth=1 || exit "$?"
+git clone "$GIT_REPO" "$GIT_PATH" --branch "$SRC_BRANCH" --single-branch --depth=1 || exit "$?"
 cd "$GIT_PATH"
 
 # Create release-dev/X.X branch
@@ -193,9 +198,8 @@ if [ "create" == "$PROCESS" ]; then
     git push -u origin "$DEV_BRANCH"
 fi
 
-# Create release/X.X branch
-
 # Run build commands
+# @todo this should be over-writable by custom command defined in .custom file
 yarn build-production || exit
 
 # Purge excluded
@@ -206,18 +210,27 @@ while read -r line; do
     fi
 done < "$GIT_PATH/.svnignore"
 
-git checkout -b "$DEST_BRANCH"
-git pull origin "$DEST_BRANCH"
+# Create or clone release/X.X branch
+if [ "update" == "$PROCESS" ]; then
+    git clone "$GIT_REPO" "$GIT_PATH_RELEASE" --branch "$DEST_BRANCH" --single-branch --depth=1 || exit "$?"
+fi
+
+# Bring changes to release build
+rsync -r --delete --exclude="*.git*" "$GIT_PATH"/* "$GIT_PATH_RELEASE"
+
+cd "$GIT_PATH_RELEASE"
 git add .
-git commit -m "New build!"
+git commit -am "New Build!"
 
 # Push to remote?
 printf "Release branch ${PROCESS}d locally! Would you like to push to the repo?"
 read -r PROCEED
 if [ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "n" ]; then
-    git push -u origin "$DEST_BRANCH"
+    if [ "new" == "$PROCESS" ]; then
+        git push -u origin "$DEST_BRANCH"
+    else
+        git push
+    fi
 fi
 
 echo "Done!"
-
-
