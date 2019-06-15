@@ -6,7 +6,9 @@ RELEASER_VERSION="1.0"
 RELEASER_PATH=$(pwd)
 BUILD_PATH="${RELEASER_PATH}/build"
 RELEASE_PATH="${RELEASER_PATH}/release"
-GITHUB_ORG="Automattic"
+# Writable
+GITHUB_ORG="" # Default "Automattic"
+PLUGIN_SLUG="" # Default "vaultpress"
 
 # Functions
 
@@ -34,6 +36,29 @@ cleanup() {
     exit 1
 }
 
+usage() {
+    echo "Usage: ./release-me.sh [options]"
+    echo
+    output 2 "RELEASE ME"
+    echo "Assistant to the Release Branch Manager"
+    echo
+    echo "Examples:"
+    echo "./release-me.sh -n -p=\"jetpack\"  # Create a new release branch on the Jetpack repo"
+    echo "./release-me.sh -u -p=\"jetpack\"  # update a release branch on the Jetpack repo"
+    echo
+    echo "Available options:"
+    echo "  -h [--help]              Shows help message"
+    echo "  -v [--version]           Shows script version"
+    echo "  -r [--release]           The release number you are branching"
+    echo "  -c [--clean]             Clean build directory"
+    echo "  -p [--plugin-slug]       Plugin's slug"
+    echo "  -o [--github-org]        GitHub organization (defaults to \"automattic\")"
+    echo "  -b [--branch]            Branch to base the release from. Defaults to \"master\""
+    echo "  -n [--new]               Start a new release branch"
+    echo "  -u [--update]            Update existing release branch"
+    exit 1
+}
+
 output 5 "-------------------------------------------"
 output 5 "          RELEASE BRANCH MANAGER           "
 output 5 "-------------------------------------------"
@@ -46,24 +71,7 @@ do
 
   case "$KEY" in
     -h|--help)
-      echo "Usage: ./release-me.sh [options]"
-      echo
-      echo "Assistant to the Release Branch Manager"
-      echo
-      echo "Examples:"
-      echo "./release-me.sh -n -p=\"jetpack\"  # Create a new release branch on the Jetpack repo"
-      echo "./release-me.sh -u -p=\"jetpack\"  # update a release branch on the Jetpack repo"
-      echo
-      echo "Available options:"
-      echo "  -h [--help]              Shows help message"
-      echo "  -v [--version]           Shows script version"
-      echo "  -r [--release]           The release number you are branching"
-      echo "  -c [--clean]             Clean build directory"
-      echo "  -p [--plugin-slug]       Plugin's slug"
-      echo "  -o [--github-org]        GitHub organization (defaults to \"automattic\")"
-      echo "  -b [--branch]            Branch to base the release from. Defaults to \"master\""
-      echo "  -n [--new]               Start a new release branch"
-      echo "  -u [--update]            Update existing release branch"
+      usage
       exit 0
       ;;
     -v|--version)
@@ -101,7 +109,7 @@ do
       ;;
     *)
       output 1 "Not valid - see \"./release-me.sh --help\"."
-      exit 1;
+      usage
       ;;
   esac
   shift
@@ -120,15 +128,27 @@ hash yarn 2>/dev/null || {
 	cleanup
 }
 
-# Check for variable requirements
+# Ask for variable requirements
 if [ -z "$PROCESS" ]; then
-    output 1 "Tell me what to do: --new or --update?"
-    cleanup
+    output 3 "Are you here to create a new release branch or update existing? Enter one: create | update"
+    read -r PROCESS
+    PROCESS=${PROCESS}
+    if [ "create" != "$PROCESS" ] && [ "update" != "$PROCESS" ]; then
+        output 1 "Try again with the -n (new) or -u (update) parameter."
+        usage
+    fi
 fi
 
 if [ -z "$PLUGIN_SLUG" ]; then
-    printf "Please enter the plugin slug: "
+    output 3 "Please enter the plugin slug: (Press enter for 'vaultpress')"
     read -r PLUGIN_SLUG
+    PLUGIN_SLUG=${PLUGIN_SLUG:-vaultpress}
+fi
+
+if [ -z "$GITHUB_ORG" ]; then
+    output 3 "Please enter the repo org: (Press enter for 'dereksmart')"
+    read -r GITHUB_ORG
+    PLUGIN_SLUG=${GITHUB_ORG:-Automattic}
 fi
 
 # Set deploy variables
@@ -136,12 +156,13 @@ GIT_REPO="git@github.com:${GITHUB_ORG}/${PLUGIN_SLUG}.git"
 GIT_PATH="${BUILD_PATH}/${PLUGIN_SLUG}"
 GIT_PATH_RELEASE="${RELEASE_PATH}/${PLUGIN_SLUG}"
 
-# Ask info
-output 2 "Let's begin..."
 if [ -z "$VERSION" ]; then
-    echo
-    printf "VERSION: "
+    output 3 "What version are you releasing?"
     read -r VERSION
+    if [ -z "$VERSION" ]; then
+        output 1 "We need a version number!"
+        usage
+    fi
 fi
 DEST_BRANCH="release/${VERSION}"
 DEV_BRANCH="release-dev/${VERSION}"

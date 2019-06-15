@@ -1,7 +1,7 @@
 # release-me
 Scripts that hopefully help in managing and shipping WordPress plugin release flows on GitHub and SVN. 
 
-Get started with `./release-me -h`
+Get started with `./release-me`
 
 You can test like this: 
 - Fork the VaultPress Repo in your GH account
