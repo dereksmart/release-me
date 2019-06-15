@@ -46,13 +46,13 @@ do
 
   case "$KEY" in
     -h|--help)
-      echo "Usage: ./release-branch.sh [options]"
+      echo "Usage: ./release-me.sh [options]"
       echo
       echo "Assistant to the Release Branch Manager"
       echo
       echo "Examples:"
-      echo "./release-branch.sh -n -p=\"jetpack\"  # Create a new release branch on the Jetpack repo"
-      echo "./release-branch.sh -u -p=\"jetpack\"  # update a release branch on the Jetpack repo"
+      echo "./release-me.sh -n -p=\"jetpack\"  # Create a new release branch on the Jetpack repo"
+      echo "./release-me.sh -u -p=\"jetpack\"  # update a release branch on the Jetpack repo"
       echo
       echo "Available options:"
       echo "  -h [--help]              Shows help message"
@@ -100,7 +100,7 @@ do
       PROCESS="update"
       ;;
     *)
-      output 1 "Not valid - see \"./release-branch.sh --help\"."
+      output 1 "Not valid - see \"./release-me.sh --help\"."
       exit 1;
       ;;
   esac
