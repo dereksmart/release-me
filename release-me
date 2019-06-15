@@ -101,7 +101,6 @@ do
     -n|--new)
       shift
       PROCESS="create"
-      SRC_BRANCH="master"
       ;;
     -u|--update)
       shift
@@ -146,9 +145,9 @@ if [ -z "$PLUGIN_SLUG" ]; then
 fi
 
 if [ -z "$GITHUB_ORG" ]; then
-    output 3 "Please enter the repo org: (Press enter for 'dereksmart')"
+    output 3 "Please enter the repo org: (Press enter for 'Automattic')"
     read -r GITHUB_ORG
-    PLUGIN_SLUG=${GITHUB_ORG:-Automattic}
+    GITHUB_ORG=${GITHUB_ORG:-Automattic}
 fi
 
 # Set deploy variables
@@ -165,9 +164,11 @@ if [ -z "$VERSION" ]; then
     fi
 fi
 DEST_BRANCH="release/${VERSION}"
-DEV_BRANCH="release-dev/${VERSION}"
+DEV_BRANCH="release/${VERSION}-dev"
 if [ "update" == "$PROCESS" ]; then
-    SRC_BRANCH="release-dev/${VERSION}"
+    SRC_BRANCH="release/${VERSION}-dev"
+else
+    SRC_BRANCH="master"
 fi
 echo
 echo "-------------------------------------------"
@@ -213,7 +214,7 @@ output 2 "Cloning GIT repository..."
 git clone "$GIT_REPO" "$GIT_PATH" --branch "$SRC_BRANCH" --single-branch --depth=1 || exit "$?"
 cd "$GIT_PATH"
 
-# Create release-dev/X.X branch
+# Create release/X.X-dev branch
 if [ "create" == "$PROCESS" ]; then
     git checkout -b "$DEV_BRANCH"
     git push -u origin "$DEV_BRANCH"
@@ -239,7 +240,11 @@ fi
 # Bring changes to release build
 rsync -r --delete --exclude="*.git*" "$GIT_PATH"/* "$GIT_PATH_RELEASE"
 
-cd "$GIT_PATH_RELEASE"
+if [ "update" == "$PROCESS" ]; then
+    cd "$GIT_PATH_RELEASE"
+elif [ "create" == "$PROCESS" ]; then
+    git checkout -b "$DEST_BRANCH"
+fi
 git add .
 git commit -am "New Build!"
 
