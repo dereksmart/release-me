@@ -13,7 +13,7 @@ PLUGIN_SLUG="" # Default `vaultpress`
 BUILD_COMMAND="" # Default `yarn build-production`
 
 # We'll need to do this later
-FULL_COMMAND="./release-me "
+FULL_COMMAND="./release-me"
 add_to_full_command() {
     FULL_COMMAND="$FULL_COMMAND $1"
 }
@@ -148,30 +148,30 @@ if [ -z "$PROCESS" ]; then
     output 3 "Are you here to create a new release branch or update existing? Enter one: create | update"
     read -r PROCESS
     PROCESS=${PROCESS}
-    if [ 'create' == "$PROCESS" ]; then
-        add_to_full_command "-n"
-    elif [ 'update' == "$PROCESS" ]; then
-        add_to_full_command "-u"
-    fi
     if [ "create" != "$PROCESS" ] && [ "update" != "$PROCESS" ]; then
         output 1 "Try again with the -n (new) or -u (update) parameter."
         usage
     fi
+fi
+if [ 'create' == "$PROCESS" ]; then
+    add_to_full_command "-n"
+elif [ 'update' == "$PROCESS" ]; then
+    add_to_full_command "-u"
 fi
 
 if [ -z "$PLUGIN_SLUG" ]; then
     output 3 "Please enter the plugin slug: (Press enter for 'vaultpress')"
     read -r PLUGIN_SLUG
     PLUGIN_SLUG=${PLUGIN_SLUG:-vaultpress}
-    add_to_full_command "-p=\"$PLUGIN_SLUG\""
 fi
+add_to_full_command "-p=\"$PLUGIN_SLUG\""
 
 if [ -z "$GITHUB_ORG" ]; then
     output 3 "Please enter the repo org: (Press enter for 'Automattic')"
     read -r GITHUB_ORG
     GITHUB_ORG=${GITHUB_ORG:-Automattic}
-    add_to_full_command "-o=\"$GITHUB_ORG\""
 fi
+add_to_full_command "-o=\"$GITHUB_ORG\""
 
 # Set deploy variables
 GIT_REPO="git@github.com:${GITHUB_ORG}/${PLUGIN_SLUG}.git"
@@ -181,12 +181,12 @@ GIT_PATH_RELEASE="${RELEASE_PATH}/${PLUGIN_SLUG}"
 if [ -z "$VERSION" ]; then
     output 3 "What version are you releasing?"
     read -r VERSION
-    add_to_full_command "-r=\"$VERSION\""
     if [ -z "$VERSION" ]; then
         output 1 "We need a version number!"
         usage
     fi
 fi
+add_to_full_command "-r=\"$VERSION\""
 
 DEST_BRANCH="release/${VERSION}"
 DEV_BRANCH="release/${VERSION}-dev"
@@ -266,11 +266,12 @@ fi
 # - .releaseignore in this directory's root
 # - .releaseignore in the plugin directory's root
 # - .svnignore in the plugin directory's root (legacy/deprecated)
-output 3 "Purging file paths found in ./releaseignore"
+output 3 "Purging file paths found in ./releaseignore..."
 RELEASEIGNORE="$(cat $RELEASER_PATH/.releaseignore $GIT_PATH/.releaseignore $GIT_PATH/.svnignore 2>/dev/null)"
 while read -r line; do
     if [[ "$line" != "#"* ]] && [ ! -z "$line" ] && [[ "$line" != "!"* ]]; then
-        echo "$line"
+        rm -rf "$line"
+        output 1 "$line"
     fi
 done <<< "$RELEASEIGNORE"
 
