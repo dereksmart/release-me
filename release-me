@@ -5,7 +5,8 @@
 RELEASER_VERSION="1.0"
 RELEASER_PATH=$(pwd)
 BUILD_PATH="${RELEASER_PATH}/build"
-RELEASE_PATH="${RELEASER_PATH}/release"
+DEV_PATH="${BUILD_PATH}/dev"
+RELEASE_PATH="${BUILD_PATH}/release"
 # Writable
 GITHUB_ORG="" # Default "Automattic"
 PLUGIN_SLUG="" # Default "vaultpress"
@@ -34,7 +35,7 @@ output_list() {
 
 cleanup() {
     cd "$RELEASER_PATH"
-    rm -rf "$BUILD_PATH" "$RELEASE_PATH"
+    rm -rf "$BUILD_PATH"
     exit 1
 }
 
@@ -68,8 +69,8 @@ output 5 "-------------------------------------------"
 # Set the arguments
 for ARG in "$@"
 do
-  KEY=$(echo $ARG | cut -f1 -d=)
-  VALUE=$(echo $ARG | cut -f2 -d=)
+  KEY=$(echo "$ARG" | cut -f1 -d=)
+  VALUE=$(echo "$ARG" | cut -f2 -d=)
 
   case "$KEY" in
     -h|--help)
@@ -158,7 +159,7 @@ fi
 
 # Set deploy variables
 GIT_REPO="git@github.com:${GITHUB_ORG}/${PLUGIN_SLUG}.git"
-GIT_PATH="${BUILD_PATH}/${PLUGIN_SLUG}"
+GIT_PATH="${DEV_PATH}/${PLUGIN_SLUG}"
 GIT_PATH_RELEASE="${RELEASE_PATH}/${PLUGIN_SLUG}"
 
 if [ -z "$VERSION" ]; then
@@ -169,6 +170,7 @@ if [ -z "$VERSION" ]; then
         usage
     fi
 fi
+
 DEST_BRANCH="release/${VERSION}"
 DEV_BRANCH="release/${VERSION}-dev"
 if [ "update" == "$PROCESS" ]; then
