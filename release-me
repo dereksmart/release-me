@@ -12,6 +12,12 @@ GITHUB_ORG="" # Default `Automattic`
 PLUGIN_SLUG="" # Default `vaultpress`
 BUILD_COMMAND="" # Default `yarn build-production`
 
+# We'll need to do this later
+FULL_COMMAND="./release-me "
+add_to_full_command() {
+    FULL_COMMAND="$FULL_COMMAND $1"
+}
+
 # Source custom variables
 source ./.custom
 
@@ -86,6 +92,7 @@ do
     -c|--clean)
       rm -rf "$BUILD_PATH"
       output 2 "Build directory cleaned!"
+      exit 0
       ;;
     -r|--release)
       shift
@@ -141,6 +148,11 @@ if [ -z "$PROCESS" ]; then
     output 3 "Are you here to create a new release branch or update existing? Enter one: create | update"
     read -r PROCESS
     PROCESS=${PROCESS}
+    if [ 'create' == "$PROCESS" ]; then
+        add_to_full_command "-n"
+    elif [ 'update' == "$PROCESS" ]; then
+        add_to_full_command "-u"
+    fi
     if [ "create" != "$PROCESS" ] && [ "update" != "$PROCESS" ]; then
         output 1 "Try again with the -n (new) or -u (update) parameter."
         usage
@@ -151,12 +163,14 @@ if [ -z "$PLUGIN_SLUG" ]; then
     output 3 "Please enter the plugin slug: (Press enter for 'vaultpress')"
     read -r PLUGIN_SLUG
     PLUGIN_SLUG=${PLUGIN_SLUG:-vaultpress}
+    add_to_full_command "-p=\"$PLUGIN_SLUG\""
 fi
 
 if [ -z "$GITHUB_ORG" ]; then
     output 3 "Please enter the repo org: (Press enter for 'Automattic')"
     read -r GITHUB_ORG
     GITHUB_ORG=${GITHUB_ORG:-Automattic}
+    add_to_full_command "-o=\"$GITHUB_ORG\""
 fi
 
 # Set deploy variables
@@ -167,6 +181,7 @@ GIT_PATH_RELEASE="${RELEASE_PATH}/${PLUGIN_SLUG}"
 if [ -z "$VERSION" ]; then
     output 3 "What version are you releasing?"
     read -r VERSION
+    add_to_full_command "-r=\"$VERSION\""
     if [ -z "$VERSION" ]; then
         output 1 "We need a version number!"
         usage
@@ -180,6 +195,7 @@ if [ "update" == "$PROCESS" ]; then
 else
     SRC_BRANCH="master"
 fi
+add_to_full_command "-b=\"$SRC_BRANCH\""
 echo
 echo "-------------------------------------------"
 echo
@@ -194,6 +210,8 @@ if [ "create" == "$PROCESS" ]; then
 fi
 output_list 3 "Release branch to ${PROCESS}" "${DEST_BRANCH}"
 output_list 3 "GIT repository" "${GIT_REPO}"
+echo
+output_list 5 "Full command: " "$FULL_COMMAND"
 echo
 printf "Are you sure? [y/N]: "
 read -r PROCEED
