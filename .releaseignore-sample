@@ -1,1 +1,3 @@
-# Enter file paths you wish to be removed from production release branch after building
+# Enter file and directory patterns you wish to be removed from production release branch after building
+# Empty lines will be ignored.
+# Patterns that begin with `!` will be ignored.

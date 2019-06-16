@@ -24,9 +24,10 @@ This script is designed to help keep your release branches stay in order. Typica
 
 ## Customize the build.
 
-This script will always respect the custom variables set in `.custom` and `.releaseignore` above anything in the target plugin.
+This script will always respect the custom variables set in `.custom` above anything in the target plugin.
 
-`.releaseignore`: A txt file that comprises of lines of file patterns to exclude from production release branches.
+`.releaseignore`: A txt file that comprises of lines of file patterns to exclude from production release branches. Add file patterns to purge extra things from the release branch that is not defined in the plugin's `.releaseignore`.
+ - This will be concatenated with the plugin's `.releaseignore` and/or `.svnignore` file if they are found.
 
 `.custom`: A file containing many over-writable aspects of of the script, such as:
  - `BUILD_COMMAND`: A string to be `eval`'d during the script that will "build" the plugin. It defaults to `yarn build-production`.
