@@ -10,6 +10,8 @@ RELEASE_PATH="${RELEASER_PATH}/release"
 GITHUB_ORG="" # Default "Automattic"
 PLUGIN_SLUG="" # Default "vaultpress"
 
+source ./.custom
+
 # Functions
 
 # Color codes:
@@ -114,18 +116,22 @@ do
   shift
 done
 
+output 3 "Checking for system requirements..."
+
 # Check for system requirements
 hash composer 2>/dev/null || {
-    output 3 "This script requires you to have composer package manager installed."
+    output 1 "This script requires you to have composer package manager installed."
     output 3 "Please install it following the instructions on https://getcomposer.org/. Aborting.";
     cleanup
 }
 
 hash yarn 2>/dev/null || {
-	output 3 "This script requires you to have yarn package manager installed."
+	output 1 "This script requires you to have yarn package manager installed."
 	output 3 "Please install it following the instructions on https://yarnpkg.com. Aborting.";
 	cleanup
 }
+
+output 2 "Requirements there!"
 
 # Ask for variable requirements
 if [ -z "$PROCESS" ]; then
@@ -195,6 +201,11 @@ fi
 
 output 2 "Confirmed! Starting process..."
 
+# Make sure that "new" is not trying to create something that already exists
+if [ "create" == "$PROCESS" ]; then
+
+fi
+
 # Create build directory if does not exists
 if [ ! -d "$BUILD_PATH" ]; then
   mkdir -p "$BUILD_PATH"
@@ -224,13 +235,39 @@ fi
 # @todo this should be over-writable by custom command defined in .custom file
 yarn build-production || exit
 
-# Purge excluded
-# @todo The idea is that we can defer to the script's directory's ".custom" file if we want to override this.
+RELEASEIGNORE="$GIT_PATH/.svnignore"
+if [ -r "${RELEASER_PATH}/.releaseignore" ]; then
+    output 3 "Custom releaseignore files found, using ${RELEASER_PATH}/.releaseignore..."
+    RELEASEIGNORE="$RELEASER_PATH/.releaseignore"
+fi
+
+# Purge dev files from release branch.
+#
+# Priority:
+# 1. This directory's .releaseignore
+# 2. The plugin's .releaseignore file at root directory
+# 3. The plugin's .svnignore file at root directory
+if [ -f "$RELEASER_PATH/.releaseignore" ]; then
+    output 2 "Custom releaseignore file found."
+    RELEASEIGNORE="$RELEASER_PATH/.releaseignore"
+elif [ -f "$GIT_PATH/.releaseignore" ]; then
+    output 2 "Custom releaseignore file found in plugin."
+    RELEASEIGNORE="$GIT_PATH/.releaseignore"
+elif [ -f "$GIT_PATH/.svnignore" ]; then # legacy name
+    output 2 "Custom releaseignore file found in plugin."
+    RELEASEIGNORE="$GIT_PATH/.svnignore"
+else
+    output 2 "No \".releaseignore\" or \".svnignore\" found - Nothing to purge from release branch!"
+    output 7 "Continuing..."
+fi
+
 while read -r line; do
     if [[ "$line" != "#"* ]]; then
         rm -rf "$line"
     fi
-done < "$GIT_PATH/.svnignore"
+done < "$RELEASEIGNORE"
+
+output 2 "Done purging files!"
 
 # Create or clone release/X.X branch
 if [ "update" == "$PROCESS" ]; then
@@ -238,7 +275,7 @@ if [ "update" == "$PROCESS" ]; then
 fi
 
 # Bring changes to release build
-rsync -r --delete --exclude="*.git*" "$GIT_PATH"/* "$GIT_PATH_RELEASE"
+rsync -r --delete --releaseignore="*.git*" "$GIT_PATH"/* "$GIT_PATH_RELEASE"
 
 if [ "update" == "$PROCESS" ]; then
     cd "$GIT_PATH_RELEASE"
