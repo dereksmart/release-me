@@ -1,12 +1,1 @@
 # Enter file paths you wish to be removed from production release branch after building
-# Default is .svnignore
-
-whatever
-guy
-hello I like to
-23 acall i99-=
-askfnasdf
-/*
-*/
-.hello
-whatever

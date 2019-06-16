@@ -203,7 +203,7 @@ output 2 "Confirmed! Starting process..."
 
 # Make sure that "new" is not trying to create something that already exists
 if [ "create" == "$PROCESS" ]; then
-
+    output 5 "@todo check if branch exists"
 fi
 
 # Create build directory if does not exists
@@ -235,31 +235,32 @@ fi
 # @todo this should be over-writable by custom command defined in .custom file
 yarn build-production || exit
 
-RELEASEIGNORE="$GIT_PATH/.svnignore"
-if [ -r "${RELEASER_PATH}/.releaseignore" ]; then
-    output 3 "Custom releaseignore files found, using ${RELEASER_PATH}/.releaseignore..."
-    RELEASEIGNORE="$RELEASER_PATH/.releaseignore"
-fi
 
 # Purge dev files from release branch.
-#
+# @todo I think this is actually a WAY simpler and better way to do it
+# Will purge any files found in:
+# - .releaseignore in this directory's root
+# - .releaseignore in the plugin directory's root
+# - .svnignore in the plugin directory's root (legacy/deprecated)
+RELEASEIGNORE=$(cat $RELEASER_PATH/.releaseignore $GIT_PATH/.releaseignore $GIT_PATH/.svnignore >/dev/null 2>&1)
+
 # Priority:
 # 1. This directory's .releaseignore
 # 2. The plugin's .releaseignore file at root directory
 # 3. The plugin's .svnignore file at root directory
-if [ -f "$RELEASER_PATH/.releaseignore" ]; then
-    output 2 "Custom releaseignore file found."
-    RELEASEIGNORE="$RELEASER_PATH/.releaseignore"
-elif [ -f "$GIT_PATH/.releaseignore" ]; then
-    output 2 "Custom releaseignore file found in plugin."
-    RELEASEIGNORE="$GIT_PATH/.releaseignore"
-elif [ -f "$GIT_PATH/.svnignore" ]; then # legacy name
-    output 2 "Custom releaseignore file found in plugin."
-    RELEASEIGNORE="$GIT_PATH/.svnignore"
-else
-    output 2 "No \".releaseignore\" or \".svnignore\" found - Nothing to purge from release branch!"
-    output 7 "Continuing..."
-fi
+#if [ -f "$RELEASER_PATH/.releaseignore" ]; then
+#    output 2 "Custom releaseignore file found."
+#    RELEASEIGNORE="$RELEASER_PATH/.releaseignore"
+#elif [ -f "$GIT_PATH/.releaseignore" ]; then
+#    output 2 "Custom releaseignore file found in plugin."
+#    RELEASEIGNORE="$GIT_PATH/.releaseignore"
+#elif [ -f "$GIT_PATH/.svnignore" ]; then # legacy name
+#    output 2 "Custom releaseignore file found in plugin."
+#    RELEASEIGNORE="$GIT_PATH/.svnignore"
+#else
+#    output 2 "No \".releaseignore\" or \".svnignore\" found - Nothing to purge from release branch!"
+#    output 7 "Continuing..."
+#fi
 
 while read -r line; do
     if [[ "$line" != "#"* ]]; then
@@ -275,7 +276,7 @@ if [ "update" == "$PROCESS" ]; then
 fi
 
 # Bring changes to release build
-rsync -r --delete --releaseignore="*.git*" "$GIT_PATH"/* "$GIT_PATH_RELEASE"
+rsync -r --delete --exclude="*.git*" "$GIT_PATH"/* "$GIT_PATH_RELEASE"
 
 if [ "update" == "$PROCESS" ]; then
     cd "$GIT_PATH_RELEASE"
@@ -289,7 +290,7 @@ git commit -am "New Build!"
 printf "Release branch ${PROCESS}d locally! Would you like to push to the repo?"
 read -r PROCEED
 if [ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "n" ]; then
-    if [ "new" == "$PROCESS" ]; then
+    if [ "create" == "$PROCESS" ]; then
         git push -u origin "$DEST_BRANCH"
     else
         git push
