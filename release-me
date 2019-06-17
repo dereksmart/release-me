@@ -179,8 +179,14 @@ GIT_PATH="${DEV_PATH}/${PLUGIN_SLUG}"
 GIT_PATH_RELEASE="${RELEASE_PATH}/${PLUGIN_SLUG}"
 
 if [ -z "$VERSION" ]; then
-    output 3 "What version are you releasing?"
-    read -r VERSION
+    if [ "update" == "$PROCESS" ]; then
+        output 3 "What is the version of the release branch you are updating?"
+        read -r VERSION
+	else
+        output 3 "What version are you releasing?"
+        read -r VERSION
+	fi
+
     if [ -z "$VERSION" ]; then
         output 1 "We need a version number!"
         usage
