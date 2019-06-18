@@ -193,10 +193,12 @@ add_to_full_command "-r=\"$VERSION\""
 
 DEST_BRANCH="release/${VERSION}"
 DEV_BRANCH="release/${VERSION}-dev"
-if [ "update" == "$PROCESS" ]; then
-    SRC_BRANCH="release/${VERSION}-dev"
-else
-    SRC_BRANCH="master"
+if [ -z "$SRC_BRANCH" ]; then
+    if [ "update" == "$PROCESS" ]; then
+        SRC_BRANCH="release/${VERSION}-dev"
+    else
+        SRC_BRANCH="master"
+    fi
 fi
 add_to_full_command "-b=\"$SRC_BRANCH\""
 echo
