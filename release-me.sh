@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Release branch management!
 
 # Variables
@@ -72,7 +72,7 @@ output 5 "          RELEASE BRANCH MANAGER           "
 output 5 "-------------------------------------------"
 
 # Source custom variables if a .custom file exists
-if [ -f "./custom" ]; then
+if [[ -f "./custom" ]]; then
     output 3 "Fetching your custom configuration from the .custom file..."
 	source ./.custom
 fi
@@ -147,29 +147,29 @@ hash yarn 2>/dev/null || {
 output 2 "Requirements there!"
 
 # Ask for variable requirements
-if [ -z "$PROCESS" ]; then
+if [[ -z "$PROCESS" ]]; then
     output 3 "Are you here to create a new release branch or update existing? Enter one: create | update"
     read -r PROCESS
     PROCESS=${PROCESS}
-    if [ "create" != "$PROCESS" ] && [ "update" != "$PROCESS" ]; then
+    if [[ "create" != "$PROCESS" ]] && [[ "update" != "$PROCESS" ]]; then
         output 1 "Try again with the -n (new) or -u (update) parameter."
         usage
     fi
 fi
-if [ 'create' == "$PROCESS" ]; then
+if [[ 'create' == "$PROCESS" ]]; then
     add_to_full_command "-n"
-elif [ 'update' == "$PROCESS" ]; then
+elif [[ 'update' == "$PROCESS" ]]; then
     add_to_full_command "-u"
 fi
 
-if [ -z "$PLUGIN_SLUG" ]; then
+if [[ -z "$PLUGIN_SLUG" ]]; then
     output 3 "Please enter the plugin slug: (Press enter for 'vaultpress')"
     read -r PLUGIN_SLUG
     PLUGIN_SLUG=${PLUGIN_SLUG:-vaultpress}
 fi
 add_to_full_command "-p=\"$PLUGIN_SLUG\""
 
-if [ -z "$GITHUB_ORG" ]; then
+if [[ -z "$GITHUB_ORG" ]]; then
     output 3 "Please enter the repo org: (Press enter for 'Automattic')"
     read -r GITHUB_ORG
     GITHUB_ORG=${GITHUB_ORG:-Automattic}
@@ -181,10 +181,10 @@ GIT_REPO="git@github.com:${GITHUB_ORG}/${PLUGIN_SLUG}.git"
 GIT_PATH="${DEV_PATH}/${PLUGIN_SLUG}"
 GIT_PATH_RELEASE="${RELEASE_PATH}/${PLUGIN_SLUG}"
 
-if [ -z "$VERSION" ]; then
+if [[ -z "$VERSION" ]]; then
     output 3 "What version are you releasing?"
     read -r VERSION
-    if [ -z "$VERSION" ]; then
+    if [[ -z "$VERSION" ]]; then
         output 1 "We need a version number!"
         usage
     fi
@@ -193,8 +193,8 @@ add_to_full_command "-r=\"$VERSION\""
 
 DEST_BRANCH="release/${VERSION}"
 DEV_BRANCH="release/${VERSION}-dev"
-if [ -z "$SRC_BRANCH" ]; then
-    if [ "update" == "$PROCESS" ]; then
+if [[ -z "$SRC_BRANCH" ]]; then
+    if [[ "update" == "$PROCESS" ]]; then
         SRC_BRANCH="release/${VERSION}-dev"
     else
         SRC_BRANCH="master"
@@ -210,7 +210,7 @@ output_list 3 "Action" "${PROCESS} release branch"
 output_list 3 "Plugin slug" "${PLUGIN_SLUG}"
 output_list 3 "Version to ${PROCESS}" "${VERSION}"
 output_list 3 "Release branch source" "${SRC_BRANCH}"
-if [ "create" == "$PROCESS" ]; then
+if [[ "create" == "$PROCESS" ]]; then
     output_list 3 "Release branch (dev) to create" "${DEV_BRANCH}"
 fi
 output_list 3 "Release branch to ${PROCESS}" "${DEST_BRANCH}"
@@ -221,7 +221,7 @@ echo
 printf "Are you sure? [y/N]: "
 read -r PROCEED
 echo
-if [ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "y" ]; then
+if [[ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "y" ]]; then
   output 1 "Release cancelled!"
   cleanup
 fi
@@ -229,18 +229,18 @@ fi
 output 2 "Confirmed! Starting process..."
 
 # Make sure that "new" is not trying to create something that already exists
-if [ "create" == "$PROCESS" ]; then
+if [[ "create" == "$PROCESS" ]]; then
     output 5 "@todo check if branch exists"
 fi
 
 # Create build directory if does not exists
-if [ ! -d "$BUILD_PATH" ]; then
+if [[ ! -d "$BUILD_PATH" ]]; then
   mkdir -p "$BUILD_PATH"
   mkdir -p "$RELEASE_PATH"
 else
   printf "Existing release found. Would you like to delete it and start fresh? [y/N]: "
   read -r PROCEED
-  if [ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "n" ]; then
+  if [[ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "n" ]]; then
     rm -rf "$BUILD_PATH" "$RELEASE_PATH"
     mkdir -p "$BUILD_PATH"
     mkdir -p "$RELEASE_PATH"
@@ -260,14 +260,14 @@ PLUGIN_VERSION_PACKAGE=$(grep -i "version" "$GIT_PATH/package.json" | awk '{prin
 README_VERSION=$(grep -i "Stable tag:" "$GIT_PATH/readme.txt" | awk '{print $3}' | sed "s/[',\"]//g")
 
 # Create release/X.X-dev branch
-if [ "create" == "$PROCESS" ]; then
+if [[ "create" == "$PROCESS" ]]; then
     git checkout -b "$DEV_BRANCH"
     git push -u origin "$DEV_BRANCH"
 fi
 
 # Run build commands
 # @todo this should be over-writable by custom command defined in .custom file
-if [ ! -z "$BUILD_COMMAND" ]; then
+if [[ ! -z "$BUILD_COMMAND" ]]; then
     eval "$BUILD_COMMAND" || exit
 else
     yarn build-production || exit
@@ -279,9 +279,9 @@ fi
 # - .releaseignore in the plugin directory's root
 # - .svnignore in the plugin directory's root (legacy/deprecated)
 output 3 "Purging file paths found in ./releaseignore..."
-RELEASEIGNORE="$(cat $RELEASER_PATH/.releaseignore $GIT_PATH/.releaseignore $GIT_PATH/.svnignore 2>/dev/null)"
+RELEASEIGNORE=$(cat "$RELEASER_PATH"/.releaseignore "$GIT_PATH"/.releaseignore "$GIT_PATH"/.svnignore 2>/dev/null)
 while read -r line; do
-    if [[ "$line" != "#"* ]] && [ ! -z "$line" ] && [[ "$line" != "!"* ]]; then
+    if [[ "$line" != "#"* ]] && [[ ! -z "$line" ]] && [[ "$line" != "!"* ]]; then
         rm -rf "$line"
         output 1 "$line"
     fi
@@ -290,16 +290,16 @@ done <<< "$RELEASEIGNORE"
 output 2 "Done purging files!"
 
 # Create or clone release/X.X branch
-if [ "update" == "$PROCESS" ]; then
+if [[ "update" == "$PROCESS" ]]; then
     git clone "$GIT_REPO" "$GIT_PATH_RELEASE" --branch "$DEST_BRANCH" --single-branch --depth=1 || exit "$?"
 fi
 
 # Bring changes to release build
 rsync -r --delete --exclude="*.git*" "$GIT_PATH"/* "$GIT_PATH_RELEASE"
 
-if [ "update" == "$PROCESS" ]; then
+if [[ "update" == "$PROCESS" ]]; then
     cd "$GIT_PATH_RELEASE"
-elif [ "create" == "$PROCESS" ]; then
+elif [[ "create" == "$PROCESS" ]]; then
     git checkout -b "$DEST_BRANCH"
 fi
 git add .
@@ -308,8 +308,8 @@ git commit -am "New Build!"
 # Push to remote?
 printf "Release branch ${PROCESS}d locally! Would you like to push to the repo? [y/N]: "
 read -r PROCEED
-if [ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "n" ]; then
-    if [ "create" == "$PROCESS" ]; then
+if [[ "$(echo "${PROCEED:-n}" | tr "[:upper:]" "[:lower:]")" != "n" ]]; then
+    if [[ "create" == "$PROCESS" ]]; then
         git push -u origin "$DEST_BRANCH"
     else
         git push
