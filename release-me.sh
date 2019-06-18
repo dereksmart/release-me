@@ -252,6 +252,13 @@ output 2 "Cloning GIT repository..."
 git clone "$GIT_REPO" "$GIT_PATH" --branch "$SRC_BRANCH" --single-branch --depth=1 || exit "$?"
 cd "$GIT_PATH"
 
+# Get main file and readme.txt versions
+# @todo use them somewhere?
+PLUGIN_VERSION_HEADER=$(grep -i "Version:" "$GIT_PATH/vaultpress.php" | awk '{print $3}' | sed "s/[',\"]//g")
+PLUGIN_VERSION_CONSTANT=$(grep -i "VAULTPRESS__VERSION" "$GIT_PATH/vaultpress.php" | awk '{print $3}' | sed "s/[',\"]//g")
+PLUGIN_VERSION_PACKAGE=$(grep -i "version" "$GIT_PATH/package.json" | awk '{print $2}' | sed "s/[',\"]//g")
+README_VERSION=$(grep -i "Stable tag:" "$GIT_PATH/readme.txt" | awk '{print $3}' | sed "s/[',\"]//g")
+
 # Create release/X.X-dev branch
 if [ "create" == "$PROCESS" ]; then
     git checkout -b "$DEV_BRANCH"
