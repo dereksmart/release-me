@@ -13,7 +13,7 @@ PLUGIN_SLUG="" # Default `vaultpress`
 BUILD_COMMAND="" # Default `yarn build-production`
 
 # We'll need to do this later
-FULL_COMMAND="./release-me"
+FULL_COMMAND="./release-me.sh"
 add_to_full_command() {
     FULL_COMMAND="$FULL_COMMAND $1"
 }

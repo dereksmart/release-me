@@ -1,9 +1,9 @@
-# release-me
+# release-me.sh
 ![](https://media1.tenor.com/images/76d80859804520e02392747222298ac4/tenor.gif?itemid=10533470)
 
 Script that hopefully help in managing and shipping WordPress plugin releases on GitHub and SVN.
 
-Get started with `./release-me`
+Get started with `./release-me.sh`
 
 # Release branch management
 This script is designed to help keep your release branches stay in order. Typically used to kick off a code freeze and start the beta cycle.
@@ -35,10 +35,10 @@ This script will always respect the custom variables set in `.custom` above anyt
 ## Example commands
 
 Kick off a new beta release!
-- `./release-me -n`
+- `./release-me.sh -n`
 
 Create a new set of release branches for version 2.1.
-- `./release-me -n -o="Automattic" -p="vaultpress" -r="2.1"`
+- `./release-me.sh -n -o="Automattic" -p="vaultpress" -r="2.1"`
 
 Update the `2.2` release branch based on the branch `hotfix-branch`
-- `./release-me -u -b="hotfix-branch" -r="2.2"`
+- `./release-me.sh -u -b="hotfix-branch" -r="2.2"`
