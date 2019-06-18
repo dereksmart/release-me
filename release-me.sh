@@ -191,8 +191,8 @@ if [ -z "$VERSION" ]; then
 fi
 add_to_full_command "-r=\"$VERSION\""
 
-DEST_BRANCH="release/${VERSION}"
-DEV_BRANCH="release/${VERSION}-dev"
+DEST_BRANCH="release/${VERSION}-prod"
+DEV_BRANCH="release/${VERSION}"
 if [ -z "$SRC_BRANCH" ]; then
     if [ "update" == "$PROCESS" ]; then
         SRC_BRANCH="release/${VERSION}-dev"
