@@ -72,10 +72,10 @@ output 5 "          RELEASE BRANCH MANAGER           "
 output 5 "-------------------------------------------"
 
 # Source custom variables if a .custom file exists
-for file in $( cat ".custom" 2>/dev/null ); do
-	output 3 "Fetching your custom configuration from the .custom file..."
+if [ -f "./custom" ]; then
+    output 3 "Fetching your custom configuration from the .custom file..."
 	source ./.custom
-done
+fi
 
 # Set the arguments
 for ARG in "$@"
